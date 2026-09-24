@@ -418,6 +418,52 @@ synthetic["discount_revenue_concession"] = (
     - synthetic["revenue"]
 )
 
+synthetic["discount_revenue_concession"] = (
+    synthetic["list_price_revenue_on_actual_sales"]
+    - synthetic["revenue"]
+)
+
+# --------------------------------------------------
+# Promotion revenue trade-off KPI
+# --------------------------------------------------
+
+synthetic["baseline_expected_revenue"] = (
+    synthetic["baseline_expected_demand"]
+    * synthetic["list_price"]
+)
+
+synthetic["promoted_expected_demand"] = (
+    synthetic["baseline_expected_demand"]
+    * synthetic["promotion_lift"]
+)
+
+synthetic["promoted_expected_revenue"] = (
+    synthetic["promoted_expected_demand"]
+    * synthetic["effective_price"]
+)
+
+synthetic["expected_revenue_tradeoff"] = (
+    synthetic["promoted_expected_revenue"]
+    - synthetic["baseline_expected_revenue"]
+)
+
+synthetic["break_even_demand_lift_pct"] = (
+    (
+        synthetic["list_price"]
+        / synthetic["effective_price"]
+        - 1
+    )
+    * 100
+)
+
+synthetic["assumed_demand_lift_pct"] = (
+    (
+        synthetic["promotion_lift"]
+        - 1
+    )
+    * 100
+)
+
 # --------------------------------------------------
 # Summary statistics
 # --------------------------------------------------
@@ -659,6 +705,58 @@ print(
     .head(15)
     .round(2)
     .to_string(index=False)
+)
+
+promotion_tradeoff = synthetic.loc[
+    synthetic["promotion_flag"]
+].copy()
+
+print(
+    "\nPromotion Revenue Trade-off Summary:"
+)
+
+print(
+    promotion_tradeoff[
+        [
+            "promotion_discount_pct",
+            "assumed_demand_lift_pct",
+            "break_even_demand_lift_pct",
+            "baseline_expected_revenue",
+            "promoted_expected_revenue",
+            "expected_revenue_tradeoff",
+        ]
+    ]
+    .head(15)
+    .round(2)
+    .to_string(index=False)
+)
+
+print(
+    "\nAverage Expected Revenue Trade-off per Promotion:"
+)
+
+print(
+    round(
+        promotion_tradeoff[
+            "expected_revenue_tradeoff"
+        ].mean(),
+        2
+    )
+)
+
+positive_tradeoff_rate = (
+    (
+        promotion_tradeoff[
+            "expected_revenue_tradeoff"
+        ] > 0
+    ).mean()
+    * 100
+)
+
+print(
+    "\nRevenue-Positive Promotion Rate:",
+    round(positive_tradeoff_rate, 2),
+    "%"
 )
 
 
