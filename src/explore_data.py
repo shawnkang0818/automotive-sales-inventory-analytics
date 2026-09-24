@@ -58,10 +58,6 @@ print(master.tail())
 print(master.shape)
 print(master.isna().sum())
 
-master.to_csv(
-    "data/processed/monthly_automotive_master.csv",
-    index=False
-)
 
 master = master.rename(columns={
     "TOTALSA": "vehicle_sales_saar_millions",
@@ -141,3 +137,56 @@ print(
     .to_string(index=False)
 )
 
+ratio_stats = master["inventory_to_sales_ratio"].describe()
+
+print("\nInventory-to-Sales Ratio Historical Summary:")
+print(ratio_stats)
+
+percentiles = master["inventory_to_sales_ratio"].quantile(
+    [0.10, 0.25, 0.50, 0.75, 0.90]
+)
+
+print("\nInventory-to-Sales Ratio Percentiles:")
+print(percentiles)
+
+current_ratio = master["inventory_to_sales_ratio"].iloc[-1]
+
+percentile_rank = (
+    master["inventory_to_sales_ratio"] <= current_ratio
+).mean() * 100
+
+print("\nCurrent Ratio:", round(current_ratio, 2))
+print("Historical Percentile Rank:", round(percentile_rank, 1))
+
+p75 = master["inventory_to_sales_ratio"].quantile(0.75)
+p90 = master["inventory_to_sales_ratio"].quantile(0.90)
+
+def classify_inventory_pressure(ratio):
+    if ratio >= p90:
+        return "High"
+    elif ratio >= p75:
+        return "Elevated"
+    else:
+        return "Normal"
+
+master["inventory_pressure_level"] = master[
+    "inventory_to_sales_ratio"
+].apply(classify_inventory_pressure)
+
+master.to_csv(
+    "data/processed/monthly_automotive_master.csv",
+    index=False
+)
+
+print(
+    master[
+        [
+            "observation_date",
+            "inventory_to_sales_ratio",
+            "inventory_growth_gap",
+            "inventory_pressure_level"
+        ]
+    ]
+    .tail(12)
+    .to_string(index=False)
+)
