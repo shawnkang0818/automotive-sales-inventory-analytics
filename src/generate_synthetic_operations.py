@@ -54,7 +54,12 @@ base_price = {
     "Pickup": 46000,
 }
 
-promotion_response_factor = 0.8
+promotion_response_factor = {
+    "SUV": 0.95,
+    "Sedan": 1.10,
+    "EV": 1.25,
+    "Pickup": 0.85,
+}
 
 # --------------------------------------------------
 # Regional demand effects
@@ -164,7 +169,9 @@ for month in months:
                     + (
                         promotion_discount_pct
                         / 100
-                        * promotion_response_factor
+                        * promotion_response_factor[
+                            vehicle_model
+                        ]
                     )
                 )
 
